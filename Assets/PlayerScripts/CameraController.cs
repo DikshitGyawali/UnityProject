@@ -1,7 +1,7 @@
 using System;
 using UnityEngine;
 
-public class CameraController : MonoBehaviour
+public class CameraController : MonoBehaviour, IPausable
 {
     [SerializeField] private Transform playerCameraCenter;
     [SerializeField] private Collider2D confiner;
@@ -10,7 +10,29 @@ public class CameraController : MonoBehaviour
 
     [SerializeField] private Camera cam;
     float halfWidth, halfHeight;
+    
+    private bool paused = false;
 
+    void OnEnable()
+    {
+        GamePause.OnPaused += OnPause;
+        GamePause.OnResumed += OnResume;
+    }
+
+    void OnDisable()
+    {
+        GamePause.OnPaused -= OnPause;
+        GamePause.OnResumed -= OnResume;
+    }
+    public void OnPause()
+    {
+        paused = true;
+    }
+    public void OnResume()
+    {
+        paused = false;
+    }
+    
     void Awake()
     {
         halfHeight = cam.orthographicSize;
@@ -18,6 +40,7 @@ public class CameraController : MonoBehaviour
     }
     void LateUpdate()
     {
+        if (paused) return;
         if (!playerCameraCenter) return;
 
         if (!confiner)

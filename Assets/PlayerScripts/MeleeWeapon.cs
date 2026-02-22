@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
-public class MeleeWeapon : MonoBehaviour
+public class MeleeWeapon : MonoBehaviour, IPausable
 {
     [SerializeField] private int damageAmount = 5;
     [SerializeField] private PlayerHealth playerHealth;
@@ -16,6 +16,26 @@ public class MeleeWeapon : MonoBehaviour
     private int upwardForce = 11;
     public int defaultForce = 10;
 
+    private bool paused = false;
+    void OnEnable()
+    {
+        GamePause.OnPaused += OnPause;
+        GamePause.OnResumed += OnResume;
+    }
+    void OnDisable()
+    {
+        GamePause.OnPaused -= OnPause;
+        GamePause.OnResumed -= OnResume;
+    }
+    public void OnPause()
+    {
+        paused = true;
+    }
+    public void OnResume()
+    {
+        paused = false;
+    }
+
     private void Awake()
     {
         state = GetComponentInParent<PlayerState>();
@@ -25,6 +45,7 @@ public class MeleeWeapon : MonoBehaviour
     }
     private void FixedUpdate()
     {
+        if (paused) return;
         if (state.IsDashing) return;
         HandleMovement();
     }

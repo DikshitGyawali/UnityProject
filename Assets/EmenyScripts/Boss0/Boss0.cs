@@ -13,6 +13,13 @@ public class Boss0 : Attackable
     [SerializeField] private GameObject rockPrefab;
     [SerializeField] private BoxCollider2D cameraBoundry;
 
+
+
+    [SerializeField] private GameObject winMenu;
+
+
+
+
     private Animator anim;
 
     private enum BossState
@@ -41,6 +48,7 @@ public class Boss0 : Attackable
     protected override void Start()
     {
         base.Start();
+        winMenu.SetActive(false);
         anim = GetComponent<Animator>();
     }
 
@@ -72,9 +80,7 @@ public class Boss0 : Attackable
             yield return new WaitForSeconds(Random.Range(0.3f, 1f));
 
             ChooseAndStartAttack();
-            Debug.Log("Attack started. waiting for animation to finish...");
             yield return new WaitUntil(() => currentState == BossState.Idle);
-            Debug.Log("Attack finished, back to idle.");
             if (isEnraged)
                 yield return StartCoroutine(RockSpawn());
         }
@@ -194,6 +200,7 @@ public class Boss0 : Attackable
         {
             currentState = BossState.Dead;
             ChangeCameraBoundry(0);
+            winMenu.SetActive(true);
             Destroy(gameObject);
         }
     }

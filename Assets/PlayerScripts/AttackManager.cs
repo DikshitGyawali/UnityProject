@@ -6,7 +6,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Animator))]
 [RequireComponent(typeof(PlayerState))]
 [RequireComponent(typeof(PlayerMovement))]
-public class AttackManager : MonoBehaviour
+public class AttackManager : MonoBehaviour, IPausable
 {
     [SerializeField] private Animator meleeAnimator; // The animator on the meleePrefab
     private Animator anim; // The Animator component on the player
@@ -15,6 +15,27 @@ public class AttackManager : MonoBehaviour
     public float upDownValue = 0f;
     public float timeBetweenAttack;
     public bool canAttack = true;
+    private bool paused = false;
+
+     void OnEnable()
+    {
+        GamePause.OnPaused += OnPause;
+        GamePause.OnResumed += OnResume;
+    }
+    void OnDisable()
+    {
+        GamePause.OnPaused -= OnPause;
+        GamePause.OnResumed -= OnResume;
+    }
+
+    public void OnPause()
+    {
+        paused = true;
+    }
+    public void OnResume()
+    {
+        paused = false;
+    }
 
     private void Awake()
     {
@@ -34,6 +55,7 @@ public class AttackManager : MonoBehaviour
     }
     void FixedUpdate()
     {
+        if (paused) return;
         if (attackPressed && canAttack)
         {
             if (upDownValue > 0.5)

@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(PlayerState))]
 [RequireComponent(typeof(TrailRenderer))]
-public class PlayerMovement : MonoBehaviour
+public class PlayerMovement : MonoBehaviour, IPausable
 {
     public Rigidbody2D rb;
     private PlayerState state;
@@ -30,6 +30,26 @@ public class PlayerMovement : MonoBehaviour
     private int jumpBufferCounter = 0;
     private float cayoteTimeCounter = 0;
 
+    private bool paused = false;
+
+    void OnEnable()
+    {
+        GamePause.OnPaused += OnPause;
+        GamePause.OnResumed += OnResume;
+    }
+    void OnDisable()
+    {
+        GamePause.OnPaused -= OnPause;
+        GamePause.OnResumed -= OnResume;
+    }
+    public void OnPause()
+    {
+        paused = true;
+    }
+    public void OnResume()
+    {
+        paused = false;
+    }
 
     private void Awake()
     {
@@ -65,6 +85,7 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (paused) return;
         if (isDashing) return;
         if (rb.linearVelocityY < -30) rb.linearVelocityY = -30;
         Move();

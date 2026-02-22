@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class EyeManipulation : MonoBehaviour
+public class EyeManipulation : MonoBehaviour, IPausable
 {
     public PlayerMovement playerMovement;
     [SerializeField] private Transform eye;
@@ -10,9 +10,31 @@ public class EyeManipulation : MonoBehaviour
     [SerializeField] private float followSpeed;
     public bool rotatePupil = true;
     public bool eyeInControl= false;
+    private bool paused = false;
+
+    void OnEnable()
+    {
+        GamePause.OnPaused += OnPause;
+        GamePause.OnResumed += OnResume;
+    }
+
+    void OnDisable()
+    {
+        GamePause.OnPaused -= OnPause;
+        GamePause.OnResumed -= OnResume;
+    }
+    public void OnPause()
+    {
+        paused = true;
+    }
+    public void OnResume()
+    {
+        paused = false;
+    }
 
     void Update()
     {
+        if (paused) return;
         if (rotatePupil)
         {
             pupil.localEulerAngles += 100 * Time.deltaTime * new Vector3(pupil.localEulerAngles.x,pupil.localEulerAngles.y,6);
@@ -25,6 +47,7 @@ public class EyeManipulation : MonoBehaviour
             
     void LateUpdate()
     {
+        if (paused) return;
         Vector3 newEyePosition;
         Vector3 newPupilPosition;
         if (eyeInControl){

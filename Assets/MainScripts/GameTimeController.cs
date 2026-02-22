@@ -7,6 +7,7 @@ public class GameTimeController : MonoBehaviour
     private Coroutine slowMotionRoutine;
     private float baseFixedDeltaTime;
 
+
     private void Awake()
     {
         
@@ -27,12 +28,30 @@ public class GameTimeController : MonoBehaviour
 
     private IEnumerator SlowTimeRoutine(float timeScale, float duration)
     {
-        Time.timeScale = timeScale;
-        Time.fixedDeltaTime = baseFixedDeltaTime * Time.timeScale; // Important for physics consistency
+        ApplyTimeScale(timeScale);
+        yield return WaitForUnpausedSeconds(duration);
+        ApplyTimeScale(1f);
+    }
 
-        yield return new WaitForSecondsRealtime(duration);
+    private void ApplyTimeScale(float scale)
+    {
+        // If paused, force 0 regardless
+        float finalScale = GamePause.IsPaused ? 0f : scale;
 
-        Time.timeScale = 1f;
-        Time.fixedDeltaTime = 0.02f;
+        Time.timeScale = finalScale;
+        Time.fixedDeltaTime = baseFixedDeltaTime * finalScale;
+    }
+
+    public IEnumerator WaitForUnpausedSeconds(float duration)
+    {
+        float timer = 0f;
+
+        while (timer < duration)
+        {
+            if (!GamePause.IsPaused)
+                timer += Time.unscaledDeltaTime;
+
+            yield return null;
+        }
     }
 }

@@ -1,6 +1,6 @@
 using UnityEngine;
 
-public class RoarPulseExpand : MonoBehaviour
+public class RoarPulseExpand : MonoBehaviour, IPausable
 {
     [SerializeField] private float expandSpeed = 15f;
     [SerializeField] private float maxScale = 12f;
@@ -9,7 +9,26 @@ public class RoarPulseExpand : MonoBehaviour
 
     private Vector3 originalScale;
     private bool expanding = true;
+    private bool paused = false;
 
+    void OnEnable()
+    {
+        GamePause.OnPaused += OnPause;
+        GamePause.OnResumed += OnResume;
+    }
+    void OnDisable()
+    {
+        GamePause.OnPaused -= OnPause;
+        GamePause.OnResumed -= OnResume;
+    }
+    public void OnPause()
+    {
+        paused = true;
+    }
+    public void OnResume()
+    {
+        paused = false;
+    }
     
 
     void Start()
@@ -20,6 +39,7 @@ public class RoarPulseExpand : MonoBehaviour
 
     void Update()
     {
+        if (paused) return;
         if (expanding)
         {
             transform.localScale += expandSpeed * Time.unscaledDeltaTime * Vector3.one;

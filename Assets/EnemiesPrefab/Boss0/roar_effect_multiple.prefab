@@ -106,4 +106,4 @@ MonoBehaviour:
   expandSpeed: 50
   maxScale: 13
   pulseDelay: 0.01
-  lifeTime: 1.3
+  lifeTime: 0.7

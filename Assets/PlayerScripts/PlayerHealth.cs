@@ -1,18 +1,19 @@
 using System;
 using System.Collections;
 using UnityEngine;
-using UnityEngine.SceneManagement;
 using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(PlayerMovement))]
 [RequireComponent(typeof(SpriteRenderer))]
 [RequireComponent(typeof(AttackManager))]
-public class PlayerHealth : MonoBehaviour
+[RequireComponent(typeof(OnDeath))]
+public class PlayerHealth : MonoBehaviour, IPausable
 {
     private Rigidbody2D player;
     private PlayerMovement playerMovement;
     private AttackManager playerAttackManager;
+    private OnDeath onDeath;
     [SerializeField] private SpriteRenderer playerSprite;
     public int health;
     public int maxHealth=5;
@@ -24,6 +25,7 @@ public class PlayerHealth : MonoBehaviour
     public float invincibleTime = 1f;
     public float noControlTime = 0.5f;
     public float healTime = 2f;
+    private bool paused = false;
     private readonly float lowTimeScaleTime =0.05f;
     private readonly float lowtimeScale = 0.25f;
     private readonly float recoilX = 7;
@@ -36,6 +38,27 @@ public class PlayerHealth : MonoBehaviour
         playerAttackManager = GetComponent<AttackManager>();
         playerSprite = GetComponent<SpriteRenderer>();
         health = maxHealth;
+        onDeath = GetComponent<OnDeath>();
+    }
+    void OnEnable()
+    {
+        GamePause.OnPaused += OnPause;
+        GamePause.OnResumed += OnResume;
+    }
+
+    void OnDisable()
+    {
+        GamePause.OnPaused -= OnPause;
+        GamePause.OnResumed -= OnResume;
+    }
+        public void OnPause()
+    {
+        paused = true;
+    }
+
+    public void OnResume()
+    {
+        paused = false;
     }
 
     private void OnHeal()
@@ -60,8 +83,9 @@ public class PlayerHealth : MonoBehaviour
         if (health <= 0)
         {
             //run death animation: TODO
-            Destroy(gameObject);
-            SceneManager.LoadScene(0);
+            //Destroy(gameObject);
+            onDeath.OnDeathMenu();
+            return;
         }
         //Recoil
         playerMovement.canControl = false;
@@ -81,9 +105,7 @@ public class PlayerHealth : MonoBehaviour
     {
         isInvincible = true;
         isTakingDamage = true;
-        Time.timeScale = lowtimeScale;
-        yield return new WaitForSecondsRealtime(lowTimeScaleTime);
-        Time.timeScale = 1;
+        GameTimeController.Instance.SlowTime(lowtimeScale, lowTimeScaleTime);
         
         float regainControlDelay = Mathf.Max(0f, noControlTime - lowTimeScaleTime);
         yield return new WaitForSeconds(regainControlDelay);
@@ -116,7 +138,8 @@ public class PlayerHealth : MonoBehaviour
     }
     void Update()
     {
-        //needs to change
+        if (paused) return;
+        //needs to change I should use coroutine to flash the player when hit, but for now this is fine
         if (isInvincible){
             playerSprite.material.color = Color.Lerp(Color.white, Color.black, Mathf.PingPong(Time.time * hitFlashSpeed, 0.75f));
         }
